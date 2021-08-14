@@ -1,0 +1,55 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+	<h1 class="display-4">Welcome</h1>
+	<p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+	<div class="container">
+		<input type="text" required id="message" />
+		<input type="button" id="sendmessage" value="Send" />
+		<div id="discussion"></div>
+	</div>
+	<!--Script references. -->
+	<!--Reference the SignalR library. -->
+	<script type="text/javascript" src="~/lib/signalr/signalr.min.js"></script>
+	<!--Add script to update the page and send messages.-->
+	<script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+
+            var messageInput = document.getElementById('message');
+
+            // Start the connection.
+            var connection = new signalR.HubConnectionBuilder()
+                                .withUrl('https://localhost:5001/update')
+                                .build();
+
+            // Create a function that the hub can call to broadcast messages.
+            connection.on('update', function (message) {
+                var encodedMsg = message;
+                // Add the message to the page.
+                var liElement = document.createElement('div');
+				liElement.innerHTML = "<strong>Update: </strong> " + encodedMsg;
+                document.getElementById('discussion').appendChild(liElement);
+            });
+
+            // Transport fallback functionality is now built into start.
+            connection.start()
+                .then(function () {
+                    console.log('connection started');
+                    document.getElementById('sendmessage').addEventListener('click', function (event) {
+                        // Call the Send method on the hub.
+                        connection.invoke('send', messageInput.value);
+
+                        // Clear text box and reset focus for next comment.
+                        messageInput.value = '';
+                        messageInput.focus();
+                        event.preventDefault();
+                    });
+            })
+            .catch(error => {
+                console.error(error.message);
+            });
+        });
+	</script>
+</div>
